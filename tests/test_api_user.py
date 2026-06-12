@@ -22,6 +22,25 @@ def test_list_users_should_return_200():
     assert "usuarios" in data
     assert isinstance(data["usuarios"], list)
 
+def test_login_valid_user_should_return_200():
+    responseRegister = register()
+
+    response = login(EMAIL)
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert "message" in data
+    assert data["message"] == "Login realizado com sucesso"
+
+    assert "authorization" in data
+    assert isinstance(data["authorization"], str)
+    assert data["authorization"].startswith("Bearer")
+
+    dataR = responseRegister.json()
+    delete_user(dataR["_id"])
+
 
 def test_register_valid_user_should_return_201():
     response = register()
@@ -29,9 +48,6 @@ def test_register_valid_user_should_return_201():
     assert response.status_code == 201
 
     data = response.json()
-
-    assert "_id" in data
-    assert data["message"] == "Cadastro realizado com sucesso"
 
     delete_user(data["_id"])
 

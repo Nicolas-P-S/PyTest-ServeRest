@@ -1,16 +1,15 @@
 import requests
 from aux_func import *
 
-"""
-TESTES
-"""
-
-
 def test_endpoint_call_200():
     response = requests.get(ENDPOINT)
 
     assert response.status_code == 200
 
+
+# =========================
+# USERS - LISTAGEM
+# =========================
 
 def test_list_users_should_return_200():
     response = get_users()
@@ -22,25 +21,65 @@ def test_list_users_should_return_200():
     assert "usuarios" in data
     assert isinstance(data["usuarios"], list)
 
+
+# =========================
+# USERS - LOGIN
+# =========================
+
 def test_login_valid_user_should_return_200():
-    responseRegister = register()
+    responseR = register()
+    assert responseR.status_code == 201, responseR.text
 
-    response = login(EMAIL)
+    user_id = responseR.json()["_id"]
+    email = responseR.used_email  # usa o email gerado neste registro
 
-    assert response.status_code == 200
+    response = login(email)
+
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+
+    assert data["message"] == "Login realizado com sucesso"
+    assert data["authorization"].startswith("Bearer")
+
+    delete_user(user_id)
+
+
+def test_login_invalid_user_should_return_401():
+    response = login("email_invalido@teste.com", "senha_errada")
+
+    assert response.status_code == 401
 
     data = response.json()
 
     assert "message" in data
-    assert data["message"] == "Login realizado com sucesso"
+    assert "Email e/ou senha inválidos" in data["message"]
 
-    assert "authorization" in data
-    assert isinstance(data["authorization"], str)
-    assert data["authorization"].startswith("Bearer")
+def test_login_without_email_should_return_400():
+    payload = {"password": "teste123"}
 
-    dataR = responseRegister.json()
-    delete_user(dataR["_id"])
+    response = requests.post(ENDPOINT + "/login", json=payload)
 
+    assert response.status_code == 400
+
+    data = response.json()
+    assert "email" in data
+
+
+def test_login_without_password_should_return_400():
+    payload = {"email": "qualquer@email.com"}
+
+    response = requests.post(ENDPOINT + "/login", json=payload)
+
+    assert response.status_code == 400
+
+    data = response.json()
+    assert "password" in data
+
+
+# =========================
+# USERS - CREATE
+# =========================
 
 def test_register_valid_user_should_return_201():
     response = register()
@@ -49,78 +88,82 @@ def test_register_valid_user_should_return_201():
 
     data = response.json()
 
+    assert "_id" in data
+    assert data["message"] == "Cadastro realizado com sucesso"
+
     delete_user(data["_id"])
 
 
-def test_get_user_by_valid_id_should_return_200():
-    register_response = register()
+def test_register_duplicate_user_should_return_400():
+    email = generate_email()  
 
-    assert register_response.status_code == 201
+    first = register(email)
+    assert first.status_code == 201, first.text
+    user_id = first.json()["_id"]
 
-    user_id = register_response.json()["_id"]
+    response = register(email)  
 
-    response = get_user_by_id(user_id)
+    assert response.status_code == 400
+
+    data = response.json()
+    assert "message" in data
+
+    delete_user(user_id)
+
+
+# =========================
+# USERS - GET BY ID
+# =========================
+
+def test_get_user_by_valid_id_should_return_200(user):
+    response = get_user_by_id(user)
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert data["_id"] == user_id
-    assert data["email"] == EMAIL
-
-    delete_user(user_id)
+    assert data["_id"] == user
 
 
 def test_get_user_by_invalid_id_should_return_400():
-    response = get_user_by_id(
-        "idInexistente123"
-    )
+    response = get_user_by_id("idInexistente123")
 
     assert response.status_code == 400
 
 
-def test_update_user_should_return_200():
-    register_response = register()
+# =========================
+# USERS - UPDATE
+# =========================
 
-    assert register_response.status_code == 201
+def test_update_user_should_return_200(user):
+    new_email = generate_email()
 
-    user_id = register_response.json()["_id"]
-
-    new_email = EMAIL
-
-    response = update_user(
-        user_id,
-        new_email
-    )
+    response = update_user(user, new_email)
 
     assert response.status_code == 200
 
-    get_response = get_user_by_id(user_id)
+    get_response = get_user_by_id(user)
 
-    assert get_response.status_code == 200 or get_response.status_code == 201
-    assert (
-        get_response.json()["email"]
-        == new_email
-    )
+    assert get_response.status_code == 200
+    assert get_response.json()["email"] == new_email
 
-    delete_user(user_id)
-
+# =========================
+# USERS - DELETE
+# =========================
 
 def test_delete_user_should_return_200():
-    register_response = register()
+    response = register()
 
-    assert register_response.status_code == 201
+    assert response.status_code == 201, response.text
 
-    user_id = register_response.json()["_id"]
+    user_id = response.json()["_id"]
 
-    response = delete_user(user_id)
+    delete_response = delete_user(user_id)
 
-    assert response.status_code == 200
+    assert delete_response.status_code == 200
 
 
-def test_delete_invalid_user_should_return_200():
-    response = delete_user(
-        "idInexistente123"
-    )
+def test_delete_invalid_user_should_return_400():
+    response = delete_user("idInexistente123")
 
     assert response.status_code == 200

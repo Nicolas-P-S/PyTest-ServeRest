@@ -1,6 +1,5 @@
 import pytest
-from aux_func import register, delete_user, login, generate_email
-
+from aux_func import *
 
 
 @pytest.fixture
@@ -14,6 +13,7 @@ def user():
     yield user_id
 
     delete_user(user_id)
+
 
 @pytest.fixture
 def auth_token():
@@ -31,3 +31,16 @@ def auth_token():
     yield token_response.json()["authorization"]
 
     delete_user(user_id)
+
+
+@pytest.fixture
+def produto_criado(auth_token):
+    response = create_product(auth_token)
+
+    assert response.status_code == 201, response.text
+
+    product_id = response.json()["_id"]
+
+    yield product_id
+
+    delete_product(product_id, auth_token)

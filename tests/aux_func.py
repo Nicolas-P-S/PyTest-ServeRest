@@ -81,14 +81,16 @@ def delete_user(user_id):
 def get_products():
     return requests.get(ENDPOINT+ "/produtos")
 
-def create_product(token):
+def create_product(token, payload=None):
     header = {"Authorization": token}
-    payload = {
-    "nome": "Produto generico TESTE2",
-    "preco": 470,
-    "descricao": "Mouse",
-    "quantidade": 381
-    }
+
+    if payload == None:
+        payload = {
+        "nome": "Produto generico TESTE2",
+        "preco": 470,
+        "descricao": "Mouse",
+        "quantidade": 381
+        }
 
     return requests.post(ENDPOINT+"/produtos", json=payload, headers=header)
 

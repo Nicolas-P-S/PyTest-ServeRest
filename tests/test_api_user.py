@@ -64,6 +64,42 @@ def test_login_without_password_should_return_400():
     data = response.json()
     assert "password" in data
 
+def test_login_in_3_sec():
+    responseR = register()
+    assert responseR.status_code == 201, responseR.text
+
+    user_id = responseR.json()["_id"]
+    email = responseR.used_email 
+
+    inicio = time.time()
+    login(email)
+    fim = time.time()
+    tempo = fim-inicio
+
+    assert tempo < 3, f"Login demorou {tempo:.2f}s (esperado menor que 3s)"
+
+    delete_user(user_id)
+    
+
+def test_post_without_body():
+    payload = {"email": "", "password": ""}
+    response  = requests.post(ENDPOINT+"/login", json=payload)
+
+    assert response.status_code == 400
+    print(response)
+
+def test_register_in_3_sec():
+    inicio = time.time()
+    response = register()
+    data = response.json()
+    fim = time.time()
+    tempo = fim-inicio
+
+    assert tempo < 3, f"Registro demorou {tempo:.2f}s (esperado menor que 3s)"
+
+    delete_user(data["_id"])
+
+
 def test_register_valid_user_should_return_201():
     response = register()
 
@@ -120,7 +156,6 @@ def test_update_user_should_return_200(user):
 
     assert get_response.status_code == 200
     assert get_response.json()["email"] == new_email
-
 
 def test_delete_user_should_return_200():
     response = register()

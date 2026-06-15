@@ -13,46 +13,19 @@ def test_post_cria_produto(produto_criado):
     assert produto_criado is not None
     assert isinstance(produto_criado, str)
 
-def test_post_cria_produto_repetido(auth_token):
-    responseOriginal = create_product(auth_token)
-    responseRepetido = create_product(auth_token)
-    dataOriginal = responseOriginal.json()
-    dataRepetido = responseRepetido.json()
+def test_post_cria_produto_in_3_sec(auth_token):
+    inicio = time.time()
 
-    assert responseRepetido.status_code == 400
-    assert dataRepetido["message"] == "Já existe produto com esse nome"
-    delete_product(dataOriginal["_id"], auth_token)
-
-def test_post_cria_produto_token_ausente():
-    response = create_product("TOKEN_INCORRETO")
+    response = create_product(auth_token)
     data = response.json()
 
-    assert response.status_code == 401
-    assert data["message"] == "Token de acesso ausente, inválido, expirado ou usuário do token não existe mais"
+    fim  = time.time()
+    tempo = fim-inicio
 
-from aux_func import *
-
-# =========================
-# GET /produtos
-# =========================
-
-def test_get_listar_produtos():
-    response = get_products()
-    data = response.json()
-
-    assert response.status_code == 200
-    assert "produtos" in data
-    assert "quantidade" in data
-    assert isinstance(data["produtos"], list)
+    assert tempo < 3, f"Criação de produto demorou {tempo:.2f}s (esperado menor que 3s)"
+    delete_product(data["_id"], auth_token)
 
 
-# =========================
-# POST /produtos
-# =========================
-
-def test_post_cria_produto(produto_criado):
-    assert produto_criado is not None
-    assert isinstance(produto_criado, str)
 
 
 def test_post_cria_produto_repetido(auth_token):
@@ -73,11 +46,6 @@ def test_post_cria_produto_token_ausente():
 
     assert response.status_code == 401
     assert data["message"] == "Token de acesso ausente, inválido, expirado ou usuário do token não existe mais"
-
-
-# =========================
-# GET /produtos/{_id}
-# =========================
 
 def test_get_produto_por_id(produto_criado):
     response = get_product_by_id(produto_criado)
@@ -94,11 +62,6 @@ def test_get_produto_por_id_inexistente():
 
     assert response.status_code == 400
     assert data["message"] == "Produto não encontrado"
-
-
-# =========================
-# DELETE /produtos/{_id}
-# =========================
 
 def test_delete_produto(produto_criado, auth_token):
     response = delete_product(produto_criado, auth_token)
@@ -122,11 +85,6 @@ def test_delete_produto_token_ausente(produto_criado):
 
     assert response.status_code == 401
     assert data["message"] == "Token de acesso ausente, inválido, expirado ou usuário do token não existe mais"
-
-
-# =========================
-# PUT /produtos/{_id}
-# =========================
 
 def test_put_atualiza_produto(produto_criado, auth_token):
     response = update_product(produto_criado, auth_token)

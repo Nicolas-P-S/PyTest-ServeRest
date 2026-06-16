@@ -1,6 +1,7 @@
 from aux_func import *
 import pytest
 
+
 @pytest.mark.edge
 def test_post_preco_negativo(auth_token):
     payload = {"nome": f"Produto Preco Negativo {int(time.time() * 1000)}", "preco": -1, "descricao": "x", "quantidade": 1}

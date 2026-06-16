@@ -5,11 +5,6 @@ ENDPOINT = "https://compassuol.serverest.dev"
 
 EMAIL = f"test_{int(time.time())}@qa.com"
 
-
-# =========================
-# USERS
-# =========================
-
 def generate_email():
     return f"test_{int(time.time() * 1000)}@qa.com"
 
@@ -73,10 +68,6 @@ def delete_user(user_id):
     return requests.delete(
         ENDPOINT + f"/usuarios/{user_id}"
     )
-
-# =========================
-# PRODUCTS
-# =========================
 
 def get_products():
     return requests.get(ENDPOINT+ "/produtos")
